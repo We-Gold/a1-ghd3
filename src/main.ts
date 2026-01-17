@@ -92,6 +92,17 @@ window.addEventListener("sundial:customTimeChanged", () => {
 	)
 })
 
+// Keep the full-window canvas responsive and keep the dial anchored
+// under the time as the layout/viewport changes.
+window.addEventListener("resize", () => {
+	updateSundial(
+		getUserLocation(),
+		getSelectedGnomonStyle(),
+		getSelectedGnomonLengthScale(),
+		getCustomTimeOverride(),
+	)
+})
+
 lastAnimationFrame = requestAnimationFrame(animationLoop)
 
 // Clean up on unload

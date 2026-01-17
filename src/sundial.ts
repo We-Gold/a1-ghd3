@@ -3,7 +3,6 @@ import * as d3 from "d3"
 import {
 	TIME_ELEMENT_ID,
 	SUNDIAL_ELEMENT_ID,
-	SUNDIAL_WIDTH,
 	SUNDIAL_RADIUS,
 	GNOMON_LENGTH_SCALE_DEFAULT,
 } from "./constants"
@@ -441,16 +440,34 @@ export const updateSundial = (
 	const sundial = d3.select(`#${SUNDIAL_ELEMENT_ID}`)
 	sundial.selectAll("*").remove()
 
-	const width = SUNDIAL_WIDTH
-	const height = SUNDIAL_WIDTH
+	/* AI Usage Note: "Right now, I have my sundial in the middle of the page below the current time. Because of the way I'm doing it, it can cut off longer shadows. Can you make it so the sundial is in the same spot but it takes up the full size of the window behind other elements so the shadow can fully show? It should still be responsive to window resize though." */
+	// Render into a full-window SVG canvas so shadows don't get clipped.
+	// The dial itself stays in the same on-screen spot by anchoring the drawing
+	// origin to the center of the #sundial placeholder element.
+	const anchorEl = document.getElementById(SUNDIAL_ELEMENT_ID)
+	const anchorRect = anchorEl?.getBoundingClientRect()
+
+	const viewportWidth = Math.max(1, window.innerWidth)
+	const viewportHeight = Math.max(1, window.innerHeight)
+
+	// Fallback: if layout isn't ready yet, use the center of the viewport.
+	const centerX = anchorRect
+		? anchorRect.left + anchorRect.width / 2
+		: viewportWidth / 2
+	const centerY = anchorRect
+		? anchorRect.top + anchorRect.height / 2
+		: viewportHeight / 2
+
 	const radius = SUNDIAL_RADIUS
 
 	const svg = sundial
 		.append("svg")
-		.attr("width", width)
-		.attr("height", height)
+		.attr("class", "sundial-canvas")
+		.attr("width", viewportWidth)
+		.attr("height", viewportHeight)
+		.attr("viewBox", `0 0 ${viewportWidth} ${viewportHeight}`)
 		.append("g")
-		.attr("transform", `translate(${width / 2}, ${height / 2})`)
+		.attr("transform", `translate(${centerX}, ${centerY})`)
 
 	// Create a circle for the sundial face
 	svg.append("circle")

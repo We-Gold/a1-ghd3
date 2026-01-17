@@ -23,6 +23,23 @@ body {
 #container {
   padding: 40px;
   text-align: center;
+  position: relative;
+  z-index: 1;
+}
+
+/* Keep a sized placeholder in-flow so layout stays the same,
+   while the real SVG canvas is rendered full-window behind it. */
+#sundial {
+  width: min(600px, 90vw);
+  aspect-ratio: 1 / 1;
+  margin: 0 auto;
+}
+
+.sundial-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
 }
 
 #locate-btn {
@@ -33,6 +50,7 @@ body {
   color: #333;
   transition: color 0.3s;
   cursor: pointer;
+  z-index: 2;
 }
 
 #locate-btn:hover {
@@ -48,6 +66,7 @@ body {
   color: #333;
   transition: color 0.3s;
   cursor: pointer;
+  z-index: 2;
 }
 
 #settings-btn:hover {
