@@ -54,6 +54,10 @@ body {
   color: var(--gold);
 }
 
+#settings-btn.active {
+  color: var(--gold);
+}
+
 #settings-panel {
   position: absolute;
   top: 50%;
@@ -63,15 +67,66 @@ body {
   border: 1px solid #ccc;
   border-radius: 8px;
   padding-top: 0px;
-  padding-bottom: 10px;
+  padding-bottom: 20px;
   padding-left: 20px;
   padding-right: 20px;
   box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-  width: 250px;
+  width: 220px;
   z-index: 1000;
   transition: transform 0.3s ease-in-out;
 }
 
 #settings-panel.hidden {
   transform: translateY(-50%) translateX(calc(-300px - 20px));
+}
+
+/* Settings dropdown styling (consistent on macOS/Windows) */
+/* AI Usage Note: "Can you enhance the styling of the dropdown so it has consistent styling on both mac and windows and has a consistent appearance to the overall settings panel?" */
+#settings-panel label {
+  display: block;
+  margin-top: 12px;
+  margin-bottom: 6px;
+  font-size: 13px;
+  color: #333;
+}
+
+#settings-panel select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 32px 8px 10px;
+  font-family: var(--font-family);
+  font-size: 14px;
+  line-height: 1.2;
+  color: #333;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  cursor: pointer;
+
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  /* Custom caret using existing text color */
+  background-image:
+    linear-gradient(45deg, transparent 50%, #333 50%),
+    linear-gradient(135deg, #333 50%, transparent 50%);
+  background-position:
+    calc(100% - 16px) calc(50%),
+    calc(100% - 11px) calc(50%);
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+}
+
+#settings-panel select:hover {
+  border-color: var(--gold);
+}
+
+#settings-panel select:focus {
+  border-color: var(--gold);
+  outline: none;
+}
+
+#settings-panel select::-ms-expand {
+  display: none;
 }
