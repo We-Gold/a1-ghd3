@@ -1,11 +1,16 @@
-import { DEFAULT_LATITUDE, DEFAULT_LONGITUDE } from "./constants"
+import {
+	DEFAULT_LATITUDE_DEGREES,
+	DEFAULT_LONGITUDE_DEGREES,
+} from "./constants"
 
 const userLocation = {
-	latitude: DEFAULT_LATITUDE,
-	longitude: DEFAULT_LONGITUDE,
+	latitudeDegrees: DEFAULT_LATITUDE_DEGREES,
+	longitudeDegrees: DEFAULT_LONGITUDE_DEGREES,
 }
 
-export const getUserLocation = () => userLocation
+export type UserLocation = typeof userLocation
+
+export const getUserLocation = (): UserLocation => userLocation
 
 /**
  * Requests the user's geolocation from the browser.
@@ -27,8 +32,8 @@ const requestUserGeolocation = (): Promise<GeolocationPosition> => {
 export const fetchAndSetUserLocation = async () => {
 	try {
 		const position = await requestUserGeolocation()
-		userLocation.latitude = position.coords.latitude
-		userLocation.longitude = position.coords.longitude
+		userLocation.latitudeDegrees = position.coords.latitude
+		userLocation.longitudeDegrees = position.coords.longitude
 	} catch (error) {
 		console.error("Error fetching user location:", error)
 	}

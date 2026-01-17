@@ -3,7 +3,7 @@ import "./style.css"
 import { updateSundial } from "./sundial"
 import { TIME_ELEMENT_ID, SUNDIAL_ELEMENT_ID } from "./constants"
 import { getCurrentSecond } from "./time"
-import { fetchAndSetUserLocation } from "./location"
+import { fetchAndSetUserLocation, getUserLocation } from "./location"
 
 /* The location pin svg below was generated with AI - "Add a location pin icon svg" */
 
@@ -36,7 +36,7 @@ const animationLoop = () => {
 	// Update sundial only if the second has changed
 	if (lastRenderedSecond !== currentSecond) {
 		lastRenderedSecond = currentSecond
-		updateSundial()
+		updateSundial(getUserLocation())
 	}
 
 	lastAnimationFrame = requestAnimationFrame(animationLoop)

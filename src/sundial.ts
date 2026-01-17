@@ -7,11 +7,74 @@ import {
 	SUNDIAL_RADIUS,
 } from "./constants"
 
+import { degreesToRadians, radiansToDegrees } from "./angles"
+
 import { now, getTimeString } from "./time"
+import type { UserLocation } from "./location"
 
-// const render
+const renderHourMarks = (
+	svg: d3.Selection<SVGGElement, unknown, HTMLElement, any>,
+	latitudeDegrees: number,
+) => {
+	const degreesPerHour = 360 / 24
+	const startHour = 2 // 2 AM
+	const endHour = 22 // 10 PM
+	const meridianHour = 12 // Noon
 
-export const updateSundial = () => {
+	const computeHourAngle = (hour: number) => {
+		return (hour - meridianHour) * degreesPerHour
+	}
+
+	const computeSundialHourAngleRelativeToNoon = (hour: number) => {
+		const HA = computeHourAngle(hour)
+		const rhs =
+			Math.tan(degreesToRadians(HA)) *
+			Math.sin(degreesToRadians(latitudeDegrees))
+
+		// atan() returns only (-90, 90), so hours outside 6–18 overlap.
+		// Flip "night hours" onto the opposite side to make them unique.
+		let theta = radiansToDegrees(Math.atan(rhs))
+		if (Math.abs(HA) > 90) theta += 180
+
+		return theta
+	}
+
+	for (let hour = startHour; hour <= endHour; hour++) {
+		const hourAngle = computeSundialHourAngleRelativeToNoon(hour)
+		const hourAngleRadians = degreesToRadians(hourAngle - 90) // Adjust by -90 degrees to start from top
+		const x1 = (SUNDIAL_RADIUS - 10) * Math.cos(hourAngleRadians)
+		const y1 = (SUNDIAL_RADIUS - 10) * Math.sin(hourAngleRadians)
+		const x2 = SUNDIAL_RADIUS * Math.cos(hourAngleRadians)
+		const y2 = SUNDIAL_RADIUS * Math.sin(hourAngleRadians)
+
+		svg.append("line")
+			.attr("x1", x1)
+			.attr("y1", y1)
+			.attr("x2", x2)
+			.attr("y2", y2)
+			.attr("stroke", "black")
+			.attr("stroke-width", 2)
+
+		// Add hour labels
+		const labelX = (SUNDIAL_RADIUS - 25) * Math.cos(hourAngleRadians)
+		const labelY = (SUNDIAL_RADIUS - 25) * Math.sin(hourAngleRadians)
+
+		svg.append("text")
+			.attr("x", labelX)
+			.attr("y", labelY + 5) // Adjust for vertical centering
+			.attr("text-anchor", "middle")
+			.attr("font-size", "12px")
+			.text(
+				hour === 0
+					? "12"
+					: hour > 12
+						? (hour - 12).toString()
+						: hour.toString(),
+			)
+	}
+}
+
+export const updateSundial = (userLocation: UserLocation) => {
 	const nowDate = now()
 	const hours = nowDate.getHours()
 	const minutes = nowDate.getMinutes()
@@ -40,5 +103,8 @@ export const updateSundial = () => {
 		.attr("fill", "#FFD700")
 		.attr("stroke", "black")
 		.attr("stroke-width", 2)
+
+	// Render hour marks
+	renderHourMarks(svg, userLocation.latitudeDegrees)
 }
 
