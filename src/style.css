@@ -227,7 +227,7 @@ body {
   accent-color: var(--gold);
 }
 
-#settings-panel input[type="time"] {
+#settings-panel input[type="number"] {
   width: 100%;
   box-sizing: border-box;
   padding: 8px 10px;
@@ -240,12 +240,12 @@ body {
   border-radius: 6px;
 }
 
-#settings-panel input[type="time"]:disabled {
+#settings-panel input[type="number"]:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
-#settings-panel input[type="time"]:focus {
+#settings-panel input[type="number"]:focus {
   border-color: var(--gold);
   outline: none;
 }

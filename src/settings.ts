@@ -1,5 +1,6 @@
 import { GnomonStyle } from "./sundial"
 import { GNOMON_LENGTH_SCALE_DEFAULT } from "./constants"
+import { getUserLocation } from "./location"
 
 const GNOMON_STYLE_STORAGE_KEY = "sundial.gnomonStyle"
 const GNOMON_LENGTH_SCALE_STORAGE_KEY = "sundial.gnomonLengthScale"
@@ -10,6 +11,10 @@ let selectedGnomonLengthScale = GNOMON_LENGTH_SCALE_DEFAULT
 let isSettingsPanelOpen = false
 let useCustomTime = false
 let customTimeHHMM: string | null = null
+
+let useCustomLocation = false
+let customLatitudeDegrees: number | null = null
+let customLongitudeDegrees: number | null = null
 
 const readStoredGnomonStyle = (): GnomonStyle | null => {
 	try {
@@ -41,6 +46,26 @@ export const getCustomTimeOverride = (): {
 	if (!match) return null
 
 	return { hours: Number(match[1]), minutes: Number(match[2]) }
+}
+
+export const getCustomLocationOverride = (): {
+	latitudeDegrees: number
+	longitudeDegrees: number
+} | null => {
+	if (!isSettingsPanelOpen) return null
+	if (!useCustomLocation) return null
+	if (customLatitudeDegrees === null || customLongitudeDegrees === null)
+		return null
+	if (!Number.isFinite(customLatitudeDegrees)) return null
+	if (!Number.isFinite(customLongitudeDegrees)) return null
+	if (customLatitudeDegrees < -90 || customLatitudeDegrees > 90) return null
+	if (customLongitudeDegrees < -180 || customLongitudeDegrees > 180)
+		return null
+
+	return {
+		latitudeDegrees: customLatitudeDegrees,
+		longitudeDegrees: customLongitudeDegrees,
+	}
 }
 
 export const initSettingsPanel = () => {
@@ -83,6 +108,10 @@ export const initSettingsPanel = () => {
 			useCustomTime = false
 			customTimeHHMM = null
 
+			useCustomLocation = false
+			customLatitudeDegrees = null
+			customLongitudeDegrees = null
+
 			const checkbox = settingsPanel.querySelector<HTMLInputElement>(
 				"#custom-time-enabled",
 			)
@@ -98,6 +127,32 @@ export const initSettingsPanel = () => {
 			if (minuteSelect) minuteSelect.disabled = true
 
 			window.dispatchEvent(new CustomEvent("sundial:customTimeChanged"))
+
+			const locationEnabled =
+				settingsPanel.querySelector<HTMLInputElement>(
+					"#custom-location-enabled",
+				)
+			const latInput =
+				settingsPanel.querySelector<HTMLInputElement>(
+					"#custom-latitude",
+				)
+			const lonInput =
+				settingsPanel.querySelector<HTMLInputElement>(
+					"#custom-longitude",
+				)
+			if (locationEnabled) locationEnabled.checked = false
+			if (latInput) {
+				latInput.value = ""
+				latInput.disabled = true
+			}
+			if (lonInput) {
+				lonInput.value = ""
+				lonInput.disabled = true
+			}
+
+			window.dispatchEvent(
+				new CustomEvent("sundial:customLocationChanged"),
+			)
 		}
 	})
 
@@ -106,6 +161,7 @@ export const initSettingsPanel = () => {
 	/* AI Usage Note: "In the settings panel, add a dropdown that allows the user to select from the different sundial modes" */
 	/* AI Usage Note: "Can you add a slider to the settings panel to adjust the gnomon length? The options should range from 0.3 to 0.9, and in the code it should be that multiplied by the sundial radius to get the gnomon length" */
 	/* AI Usage Note: "Can you add an option to the settings panel to set a custom time for the sundial? It should only be active while the settings panel is open, and then reset when it is closed." */
+	/* AI Usage Note: "Similar to the custom time option, can you add a custom location (latitude and longitude) option that is similarly temporary?" */
 	settingsPanel.innerHTML = `
 		<h2>Settings</h2>
 		<label for="gnomon-style-select">Sundial mode</label>
@@ -148,6 +204,14 @@ export const initSettingsPanel = () => {
 					.join("")}
 			</select>
 		</div>
+		<div class="settings-row">
+			<input id="custom-location-enabled" type="checkbox" />
+			<label for="custom-location-enabled">Use custom location</label>
+		</div>
+		<label for="custom-latitude">Latitude</label>
+		<input id="custom-latitude" type="number" step="0.0001" min="-90" max="90" disabled />
+		<label for="custom-longitude">Longitude</label>
+		<input id="custom-longitude" type="number" step="0.0001" min="-180" max="180" disabled />
 	`
 
 	const select = settingsPanel.querySelector<HTMLSelectElement>(
@@ -265,5 +329,61 @@ export const initSettingsPanel = () => {
 
 	hourSelect.addEventListener("change", onSelectChange)
 	minuteSelect.addEventListener("change", onSelectChange)
+
+	const customLocationEnabled = settingsPanel.querySelector<HTMLInputElement>(
+		"#custom-location-enabled",
+	)
+	const latitudeInput =
+		settingsPanel.querySelector<HTMLInputElement>("#custom-latitude")
+	const longitudeInput =
+		settingsPanel.querySelector<HTMLInputElement>("#custom-longitude")
+	if (!customLocationEnabled || !latitudeInput || !longitudeInput) return
+
+	const setLocationInputsEnabled = () => {
+		latitudeInput.disabled = !useCustomLocation
+		// Longitude isn't used right now; keep it read-only.
+		longitudeInput.disabled = true
+	}
+
+	customLocationEnabled.checked = useCustomLocation
+	setLocationInputsEnabled()
+
+	if (customLatitudeDegrees !== null) {
+		latitudeInput.value = String(customLatitudeDegrees)
+	}
+	if (customLongitudeDegrees !== null) {
+		longitudeInput.value = String(customLongitudeDegrees)
+	}
+
+	customLocationEnabled.addEventListener("change", () => {
+		useCustomLocation = customLocationEnabled.checked
+		setLocationInputsEnabled()
+
+		if (!useCustomLocation) {
+			customLatitudeDegrees = null
+			customLongitudeDegrees = null
+			latitudeInput.value = ""
+			longitudeInput.value = ""
+		} else if (
+			customLatitudeDegrees === null ||
+			customLongitudeDegrees === null
+		) {
+			const current = getUserLocation()
+			customLatitudeDegrees = current.latitudeDegrees
+			customLongitudeDegrees = current.longitudeDegrees
+			latitudeInput.value = String(customLatitudeDegrees)
+			longitudeInput.value = String(customLongitudeDegrees)
+		}
+
+		window.dispatchEvent(new CustomEvent("sundial:customLocationChanged"))
+	})
+
+	const onLocationInput = () => {
+		if (!useCustomLocation) return
+		customLatitudeDegrees = Number(latitudeInput.value)
+		window.dispatchEvent(new CustomEvent("sundial:customLocationChanged"))
+	}
+
+	latitudeInput.addEventListener("input", onLocationInput)
 }
 

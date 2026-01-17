@@ -8,6 +8,7 @@ import {
 	getSelectedGnomonLengthScale,
 	getSelectedGnomonStyle,
 	getCustomTimeOverride,
+	getCustomLocationOverride,
 	initSettingsPanel,
 } from "./settings"
 
@@ -54,8 +55,13 @@ const animationLoop = () => {
 	// Update sundial only if the second has changed
 	if (lastRenderedSecond !== currentSecond) {
 		lastRenderedSecond = currentSecond
+		const baseLocation = getUserLocation()
+		const locationOverride = getCustomLocationOverride()
+		const location = locationOverride
+			? { ...baseLocation, ...locationOverride }
+			: baseLocation
 		updateSundial(
-			getUserLocation(),
+			location,
 			getSelectedGnomonStyle(),
 			getSelectedGnomonLengthScale(),
 			getCustomTimeOverride(),
@@ -66,8 +72,13 @@ const animationLoop = () => {
 }
 
 window.addEventListener("sundial:gnomonStyleChanged", () => {
+	const baseLocation = getUserLocation()
+	const locationOverride = getCustomLocationOverride()
+	const location = locationOverride
+		? { ...baseLocation, ...locationOverride }
+		: baseLocation
 	updateSundial(
-		getUserLocation(),
+		location,
 		getSelectedGnomonStyle(),
 		getSelectedGnomonLengthScale(),
 		getCustomTimeOverride(),
@@ -75,8 +86,13 @@ window.addEventListener("sundial:gnomonStyleChanged", () => {
 })
 
 window.addEventListener("sundial:gnomonLengthScaleChanged", () => {
+	const baseLocation = getUserLocation()
+	const locationOverride = getCustomLocationOverride()
+	const location = locationOverride
+		? { ...baseLocation, ...locationOverride }
+		: baseLocation
 	updateSundial(
-		getUserLocation(),
+		location,
 		getSelectedGnomonStyle(),
 		getSelectedGnomonLengthScale(),
 		getCustomTimeOverride(),
@@ -84,8 +100,27 @@ window.addEventListener("sundial:gnomonLengthScaleChanged", () => {
 })
 
 window.addEventListener("sundial:customTimeChanged", () => {
+	const baseLocation = getUserLocation()
+	const locationOverride = getCustomLocationOverride()
+	const location = locationOverride
+		? { ...baseLocation, ...locationOverride }
+		: baseLocation
 	updateSundial(
-		getUserLocation(),
+		location,
+		getSelectedGnomonStyle(),
+		getSelectedGnomonLengthScale(),
+		getCustomTimeOverride(),
+	)
+})
+
+window.addEventListener("sundial:customLocationChanged", () => {
+	const baseLocation = getUserLocation()
+	const locationOverride = getCustomLocationOverride()
+	const location = locationOverride
+		? { ...baseLocation, ...locationOverride }
+		: baseLocation
+	updateSundial(
+		location,
 		getSelectedGnomonStyle(),
 		getSelectedGnomonLengthScale(),
 		getCustomTimeOverride(),
