@@ -8,10 +8,14 @@ import {
 } from "./constants"
 
 import { degreesToRadians, radiansToDegrees } from "./angles"
-
+import { romanNumeralForHour } from "./roman-numerals"
 import { now, getTimeString } from "./time"
 import type { UserLocation } from "./location"
 
+/**
+ * Notes about AI usage:
+ * "For the hour marks, can you make them use roman numerals and rotate to face the center rather than being vertically aligned?"
+ */
 const renderHourMarks = (
 	svg: d3.Selection<SVGGElement, unknown, HTMLElement, any>,
 	latitudeDegrees: number,
@@ -56,21 +60,20 @@ const renderHourMarks = (
 			.attr("stroke-width", 2)
 
 		// Add hour labels
-		const labelX = (SUNDIAL_RADIUS - 25) * Math.cos(hourAngleRadians)
-		const labelY = (SUNDIAL_RADIUS - 25) * Math.sin(hourAngleRadians)
+		const labelX = (SUNDIAL_RADIUS - 30) * Math.cos(hourAngleRadians)
+		const labelY = (SUNDIAL_RADIUS - 30) * Math.sin(hourAngleRadians)
+		const labelRotationDegrees = hourAngle - 90
 
 		svg.append("text")
-			.attr("x", labelX)
-			.attr("y", labelY + 5) // Adjust for vertical centering
-			.attr("text-anchor", "middle")
-			.attr("font-size", "12px")
-			.text(
-				hour === 0
-					? "12"
-					: hour > 12
-						? (hour - 12).toString()
-						: hour.toString(),
+			.attr(
+				"transform",
+				`translate(${labelX}, ${labelY}) rotate(${labelRotationDegrees + 90})`,
 			)
+			.attr("text-anchor", "middle")
+			.attr("dominant-baseline", "middle")
+			.attr("font-size", "28px")
+			.attr("font-family", "Gideon Roman")
+			.text(romanNumeralForHour(hour))
 	}
 }
 
