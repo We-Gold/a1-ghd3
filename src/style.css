@@ -139,6 +139,7 @@ body {
 
 /* WebKit slider styling */
 #settings-panel input[type="range"] {
+  appearance: none;
   -webkit-appearance: none;
   background: transparent;
 }
@@ -172,4 +173,60 @@ body {
   border-radius: 50%;
   background: var(--gold);
   border: 1px solid #333;
+}
+
+#settings-panel .settings-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+#settings-panel .settings-time {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+#settings-panel .settings-time select {
+  width: auto;
+  flex: 1;
+  min-width: 0;
+}
+
+#settings-panel .settings-time span {
+  color: #333;
+  user-select: none;
+}
+
+#settings-panel .settings-row label {
+  margin: 0;
+}
+
+#settings-panel input[type="checkbox"] {
+  accent-color: var(--gold);
+}
+
+#settings-panel input[type="time"] {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  font-family: var(--font-family);
+  font-size: 14px;
+  line-height: 1.2;
+  color: #333;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+#settings-panel input[type="time"]:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+#settings-panel input[type="time"]:focus {
+  border-color: var(--gold);
+  outline: none;
 }

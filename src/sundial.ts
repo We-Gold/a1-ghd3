@@ -415,12 +415,23 @@ export const updateSundial = (
 	userLocation: UserLocation,
 	gnomonStyle: GnomonStyle = GnomonStyle.CurvedWall,
 	gnomonLengthScale: number = GNOMON_LENGTH_SCALE_DEFAULT,
+	customTimeOverride?: { hours: number; minutes: number } | null,
 ) => {
-	const nowDate = now()
-	const hours = nowDate.getHours()
-	const minutes = nowDate.getMinutes()
+	const realNow = now()
+	const displayDate = new Date(realNow)
+	if (customTimeOverride) {
+		displayDate.setHours(
+			customTimeOverride.hours,
+			customTimeOverride.minutes,
+			0,
+			0,
+		)
+	}
 
-	const timeString = getTimeString(nowDate)
+	const hours = displayDate.getHours()
+	const minutes = displayDate.getMinutes()
+
+	const timeString = getTimeString(displayDate)
 
 	document.getElementById(TIME_ELEMENT_ID)!.textContent = timeString
 

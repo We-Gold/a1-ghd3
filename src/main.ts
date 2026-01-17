@@ -7,6 +7,7 @@ import { fetchAndSetUserLocation, getUserLocation } from "./location"
 import {
 	getSelectedGnomonLengthScale,
 	getSelectedGnomonStyle,
+	getCustomTimeOverride,
 	initSettingsPanel,
 } from "./settings"
 
@@ -57,6 +58,7 @@ const animationLoop = () => {
 			getUserLocation(),
 			getSelectedGnomonStyle(),
 			getSelectedGnomonLengthScale(),
+			getCustomTimeOverride(),
 		)
 	}
 
@@ -68,6 +70,7 @@ window.addEventListener("sundial:gnomonStyleChanged", () => {
 		getUserLocation(),
 		getSelectedGnomonStyle(),
 		getSelectedGnomonLengthScale(),
+		getCustomTimeOverride(),
 	)
 })
 
@@ -76,6 +79,16 @@ window.addEventListener("sundial:gnomonLengthScaleChanged", () => {
 		getUserLocation(),
 		getSelectedGnomonStyle(),
 		getSelectedGnomonLengthScale(),
+		getCustomTimeOverride(),
+	)
+})
+
+window.addEventListener("sundial:customTimeChanged", () => {
+	updateSundial(
+		getUserLocation(),
+		getSelectedGnomonStyle(),
+		getSelectedGnomonLengthScale(),
+		getCustomTimeOverride(),
 	)
 })
 
