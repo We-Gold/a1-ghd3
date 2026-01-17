@@ -4,7 +4,7 @@ export const SUNDIAL_ELEMENT_ID = "sundial"
 export const SUNDIAL_WIDTH = 600
 export const SUNDIAL_RADIUS = SUNDIAL_WIDTH / 2 - 20
 
-export const GNOMON_LENGTH = SUNDIAL_RADIUS * 0.9
+export const GNOMON_LENGTH = SUNDIAL_RADIUS * 0.8
 
 // San Diego Location (better for testing)
 export const DEFAULT_LATITUDE_DEGREES = 32.74554724936368

@@ -13,6 +13,8 @@ import { romanNumeralForHour } from "./roman-numerals"
 import { now, getTimeString } from "./time"
 import type { UserLocation } from "./location"
 
+type Point = { x: number; y: number }
+
 const computeHourAngle = (
 	hour: number,
 	meridianHour: number,
@@ -92,7 +94,7 @@ const renderHourMarks = (
 	}
 }
 
-const renderGnomon = (
+export const renderGnomon = (
 	svg: d3.Selection<SVGGElement, unknown, HTMLElement, any>,
 	latitudeDegrees: number,
 	hour: number,
@@ -149,6 +151,255 @@ const renderGnomon = (
 		.attr("stroke-width", 2)
 }
 
+/**
+ * AI Usage Note:
+ * "Can you make another function renderGnomonWedge, which is similar to the current one but instead of it being a line, it is a triangle with a triangular shadow?"
+ */
+export const renderGnomonWedge = (
+	svg: d3.Selection<SVGGElement, unknown, HTMLElement, any>,
+	latitudeDegrees: number,
+	hour: number,
+	meridianHour: number,
+	degreesPerHour: number,
+) => {
+	const gnomonEndY =
+		-GNOMON_LENGTH * Math.cos(degreesToRadians(latitudeDegrees))
+
+	// A simple isosceles triangle "wedge" anchored at the center.
+	const baseWidth = 18
+	const baseLeft = { x: -baseWidth / 2, y: 0 }
+	const baseRight: Point = { x: baseWidth / 2, y: 0 }
+	const tip: Point = { x: 0, y: gnomonEndY }
+
+	svg.append("polygon")
+		.attr(
+			"points",
+			`${baseLeft.x},${baseLeft.y} ${baseRight.x},${baseRight.y} ${tip.x},${tip.y}`,
+		)
+		.attr("fill", "black")
+		.attr("stroke", "black")
+		.attr("stroke-width", 2)
+
+	// Calculate the angle for the shadow
+	const theta = degreesToRadians(
+		computeSundialHourAngleRelativeToNoon(
+			hour,
+			meridianHour,
+			degreesPerHour,
+			latitudeDegrees,
+		),
+	)
+
+	// Calculate the hour angle in radians
+	const hourAngleRad = degreesToRadians(
+		computeHourAngle(hour, meridianHour, degreesPerHour),
+	)
+
+	// Angle of elevation of the sun
+	const alpha = Math.asin(
+		Math.cos(degreesToRadians(latitudeDegrees)) * Math.cos(hourAngleRad),
+	)
+
+	const tanAlpha = Math.tan(alpha)
+	if (!Number.isFinite(tanAlpha) || Math.abs(tanAlpha) < 1e-6) return
+
+	// Length of the shadow (projection of the gnomon tip)
+	const shadowLength = GNOMON_LENGTH / tanAlpha
+
+	const shadowTip: Point = {
+		x: shadowLength * Math.sin(theta),
+		y: -shadowLength * Math.cos(theta),
+	}
+
+	// Triangular shadow (base of wedge -> projected tip)
+	svg.append("polygon")
+		.attr(
+			"points",
+			`${baseLeft.x},${baseLeft.y} ${baseRight.x},${baseRight.y} ${shadowTip.x},${shadowTip.y}`,
+		)
+		.attr("fill", "rgba(0, 0, 0, 0.25)")
+}
+
+/**
+ * AI Usage Note:
+ * "Can you make another where the gnomon is a thin triangle with one edge along the sundial and another vertical (perpendicular to the surface), and the third connecting between the perpendicular edge and the center of the sundial?"
+ */
+export const renderGnomonRightTriangle = (
+	svg: d3.Selection<SVGGElement, unknown, HTMLElement, any>,
+	latitudeDegrees: number,
+	hour: number,
+	meridianHour: number,
+	degreesPerHour: number,
+) => {
+	// A thin right-triangle approximation of a gnomon where:
+	// - one edge lies on the dial surface (center -> basePoint)
+	// - one edge represents a vertical wall (basePoint -> verticalTop)
+	// - the third edge connects the vertical top back to the center
+	//
+	// Note: SVG is 2D, so the "vertical" edge is depicted with a small offset.
+	const basePoint: Point = {
+		x: 0,
+		y: -GNOMON_LENGTH * Math.cos(degreesToRadians(latitudeDegrees)),
+	}
+	const verticalVisualOffset = 8
+	const verticalTop: Point = {
+		x: basePoint.x + verticalVisualOffset,
+		y: basePoint.y,
+	}
+	const center: Point = { x: 0, y: 0 }
+
+	svg.append("polygon")
+		.attr(
+			"points",
+			`${center.x},${center.y} ${basePoint.x},${basePoint.y} ${verticalTop.x},${verticalTop.y}`,
+		)
+		.attr("fill", "black")
+		.attr("stroke", "black")
+		.attr("stroke-width", 2)
+
+	const theta = degreesToRadians(
+		computeSundialHourAngleRelativeToNoon(
+			hour,
+			meridianHour,
+			degreesPerHour,
+			latitudeDegrees,
+		),
+	)
+
+	const hourAngleRad = degreesToRadians(
+		computeHourAngle(hour, meridianHour, degreesPerHour),
+	)
+
+	const alpha = Math.asin(
+		Math.cos(degreesToRadians(latitudeDegrees)) * Math.cos(hourAngleRad),
+	)
+
+	const tanAlpha = Math.tan(alpha)
+	if (!Number.isFinite(tanAlpha) || Math.abs(tanAlpha) < 1e-6) return
+
+	const shadowLength = GNOMON_LENGTH / tanAlpha
+	const shadowTip: Point = {
+		x: shadowLength * Math.sin(theta),
+		y: -shadowLength * Math.cos(theta),
+	}
+
+	// Triangular shadow from the edge-on gnomon (center -> basePoint) toward shadow tip.
+	svg.append("polygon")
+		.attr(
+			"points",
+			`${center.x},${center.y} ${basePoint.x},${basePoint.y} ${shadowTip.x},${shadowTip.y}`,
+		)
+		.attr("fill", "rgba(0, 0, 0, 0.25)")
+}
+
+/**
+ * Curved "vertical wall" gnomon drawn with SVG paths.
+ *
+ * Geometry matches `renderGnomonRightTriangle` for two edges:
+ * - center -> basePoint (on the sundial surface)
+ * - center -> verticalTop (represents a vertical/perpendicular edge, visualized in 2D)
+ *
+ * The edge basePoint -> verticalTop is replaced with a concave curve.
+ * Shadow is rendered as a similarly-curved path (approximation).
+ *
+ * AI Usage Note:
+ * "I want to add a fancier gnomon that has a curve to it, where two of the edges are the same as the right angle triangle, but the vertical edge is now a concave curve. This will impact the appearance of the shadow."
+ */
+export const renderGnomonCurvedWall = (
+	svg: d3.Selection<SVGGElement, unknown, HTMLElement, any>,
+	latitudeDegrees: number,
+	hour: number,
+	meridianHour: number,
+	degreesPerHour: number,
+) => {
+	const center: Point = { x: 0, y: 0 }
+	const basePoint: Point = {
+		x: 0,
+		y: -GNOMON_LENGTH * Math.cos(degreesToRadians(latitudeDegrees)),
+	}
+
+	// 2D visualization of the vertical/perpendicular edge.
+	const verticalVisualOffset = 10
+	const verticalTop: Point = {
+		x: basePoint.x + verticalVisualOffset,
+		y: basePoint.y,
+	}
+
+	const midpoint = (a: Point, b: Point): Point => ({
+		x: (a.x + b.x) / 2,
+		y: (a.y + b.y) / 2,
+	})
+	const distance = (a: Point, b: Point) => Math.hypot(a.x - b.x, a.y - b.y)
+	const normalize = (p: Point): Point => {
+		const len = Math.hypot(p.x, p.y)
+		if (len === 0) return { x: 0, y: 0 }
+		return { x: p.x / len, y: p.y / len }
+	}
+	const add = (a: Point, b: Point): Point => ({ x: a.x + b.x, y: a.y + b.y })
+	const scale = (p: Point, s: number): Point => ({ x: p.x * s, y: p.y * s })
+	const sub = (a: Point, b: Point): Point => ({ x: a.x - b.x, y: a.y - b.y })
+
+	// Control point that pulls the curve inward (toward the center), making it concave.
+	const midBV = midpoint(basePoint, verticalTop)
+	const towardCenter = normalize(sub(center, midBV))
+	const curveStrength = Math.min(14, distance(basePoint, verticalTop) * 1.2)
+	const controlBV = add(midBV, scale(towardCenter, curveStrength))
+
+	const gnomonPath =
+		`M ${center.x} ${center.y} ` +
+		`L ${basePoint.x} ${basePoint.y} ` +
+		`Q ${controlBV.x} ${controlBV.y} ${verticalTop.x} ${verticalTop.y} ` +
+		`Z`
+
+	svg.append("path")
+		.attr("d", gnomonPath)
+		.attr("fill", "black")
+		.attr("stroke", "black")
+		.attr("stroke-width", 2)
+
+	// --- Shadow (approximation) ---
+	const theta = degreesToRadians(
+		computeSundialHourAngleRelativeToNoon(
+			hour,
+			meridianHour,
+			degreesPerHour,
+			latitudeDegrees,
+		),
+	)
+	const hourAngleRad = degreesToRadians(
+		computeHourAngle(hour, meridianHour, degreesPerHour),
+	)
+	const alpha = Math.asin(
+		Math.cos(degreesToRadians(latitudeDegrees)) * Math.cos(hourAngleRad),
+	)
+
+	const tanAlpha = Math.tan(alpha)
+	if (!Number.isFinite(tanAlpha) || Math.abs(tanAlpha) < 1e-6) return
+
+	const shadowLength = GNOMON_LENGTH / tanAlpha
+	const shadowTip: Point = {
+		x: shadowLength * Math.sin(theta),
+		y: -shadowLength * Math.cos(theta),
+	}
+
+	// Curve control for the shadow edge basePoint -> shadowTip.
+	const midBS = midpoint(basePoint, shadowTip)
+	const towardCenterShadow = normalize(sub(center, midBS))
+	const curveStrengthShadow = Math.min(
+		18,
+		distance(basePoint, shadowTip) * 0.15,
+	)
+	const controlBS = add(midBS, scale(towardCenterShadow, curveStrengthShadow))
+
+	const shadowPath =
+		`M ${center.x} ${center.y} ` +
+		`L ${basePoint.x} ${basePoint.y} ` +
+		`Q ${controlBS.x} ${controlBS.y} ${shadowTip.x} ${shadowTip.y} ` +
+		`Z`
+
+	svg.append("path").attr("d", shadowPath).attr("fill", "rgba(0, 0, 0, 0.25)")
+}
+
 export const updateSundial = (userLocation: UserLocation) => {
 	const nowDate = now()
 	const hours = nowDate.getHours()
@@ -183,7 +434,7 @@ export const updateSundial = (userLocation: UserLocation) => {
 	renderHourMarks(svg, userLocation.latitudeDegrees)
 
 	// Render gnomon
-	renderGnomon(
+	renderGnomonCurvedWall(
 		svg,
 		userLocation.latitudeDegrees,
 		hours + minutes / 60,
