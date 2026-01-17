@@ -60,7 +60,127 @@ const computeSundialHourAngleRelativeToNoon = (
 const renderHourMarks = (
 	svg: d3.Selection<SVGGElement, unknown, HTMLElement, any>,
 	latitudeDegrees: number,
+	showCompass: boolean = true,
 ) => {
+	const CENTRAL_CIRCLE_RADIUS = 120
+	const COMPASS_CENTER: Point = { x: 0, y: CENTRAL_CIRCLE_RADIUS / 2 }
+	const COMPASS_RADIUS = CENTRAL_CIRCLE_RADIUS / 2
+
+	// Draw a circle at the center of the sundial
+	svg.append("circle")
+		.attr("cx", 0)
+		.attr("cy", 0)
+		.attr("r", CENTRAL_CIRCLE_RADIUS)
+		.attr("stroke", "black")
+		.attr("stroke-opacity", 0.5)
+		.attr("stroke-width", 1.5)
+		.attr("fill", "none")
+
+	if (showCompass) {
+		// Draw a circle to contain a compass rose
+		svg.append("circle")
+			.attr("cx", COMPASS_CENTER.x)
+			.attr("cy", COMPASS_CENTER.y)
+			.attr("r", COMPASS_RADIUS)
+			.attr("stroke", "black")
+			.attr("stroke-opacity", 0.1)
+			.attr("stroke-width", 1.5)
+			.attr("fill", "none")
+
+		/* AI Usage Note: "can you draw a compass rose with the cardinal directions? Make sure to use Gideon Roman for the font" */
+		// Compass rose (cardinal directions)
+		const compassStroke = "rgba(0, 0, 0, 0.3)"
+		const compassStrokeThickness = 2
+		const labelInset = 18
+		const labelFontSize = "22px"
+
+		// Crosshair strokes (rects instead of lines)
+		const crossInset = 32
+		const crossLength = 2 * (COMPASS_RADIUS - crossInset)
+
+		// Vertical stroke
+		svg.append("rect")
+			.attr("x", COMPASS_CENTER.x - compassStrokeThickness / 2)
+			.attr("y", COMPASS_CENTER.y - crossLength / 2)
+			.attr("width", compassStrokeThickness)
+			.attr("height", crossLength)
+			.attr("fill", compassStroke)
+
+		// Horizontal stroke
+		svg.append("rect")
+			.attr("x", COMPASS_CENTER.x - crossLength / 2)
+			.attr("y", COMPASS_CENTER.y - compassStrokeThickness / 2)
+			.attr("width", crossLength)
+			.attr("height", compassStrokeThickness)
+			.attr("fill", compassStroke)
+
+		// Star ticks (rotated rects at a configurable angular interval)
+		// Adjust this to change the number of rays (e.g., 30, 45, 60).
+		const starTickIntervalDegrees = 15
+		const starTickThickness = 1
+		const starTickLength = crossLength * 0.5
+
+		if (
+			Number.isFinite(starTickIntervalDegrees) &&
+			starTickIntervalDegrees > 0
+		) {
+			const starGroup = svg
+				.append("g")
+				.attr(
+					"transform",
+					`translate(${COMPASS_CENTER.x}, ${COMPASS_CENTER.y})`,
+				)
+
+			for (let angle = 0; angle < 360; angle += starTickIntervalDegrees) {
+				// Skip the main axes since the crosshair already covers them.
+				const normalized = ((angle % 360) + 360) % 360
+				if (normalized % 90 === 0) continue
+
+				starGroup
+					.append("rect")
+					.attr("x", -starTickThickness / 2)
+					.attr("y", -starTickLength / 2)
+					.attr("width", starTickThickness)
+					.attr("height", starTickLength)
+					.attr("transform", `rotate(${angle})`)
+					.attr("fill", "rgba(0, 0, 0, 0.2)")
+			}
+		}
+
+		const addCompassLabel = (text: string, x: number, y: number) => {
+			svg.append("text")
+				.attr("x", x)
+				.attr("y", y)
+				.attr("text-anchor", "middle")
+				.attr("dominant-baseline", "middle")
+				.attr("font-size", labelFontSize)
+				.attr("font-family", "Gideon Roman")
+				.attr("fill", compassStroke)
+				.text(text)
+		}
+
+		addCompassLabel(
+			"N",
+			COMPASS_CENTER.x,
+			COMPASS_CENTER.y - (COMPASS_RADIUS - labelInset) + 5,
+		)
+		addCompassLabel(
+			"E",
+			COMPASS_CENTER.x + (COMPASS_RADIUS - labelInset) - 4,
+			COMPASS_CENTER.y + 1,
+		)
+		addCompassLabel(
+			"S",
+			COMPASS_CENTER.x,
+			COMPASS_CENTER.y + (COMPASS_RADIUS - labelInset),
+		)
+		addCompassLabel(
+			"W",
+			COMPASS_CENTER.x - (COMPASS_RADIUS - labelInset) + 2,
+			COMPASS_CENTER.y + 1,
+		)
+	}
+
 	for (let hour = startHour; hour <= endHour; hour++) {
 		const hourAngle = computeSundialHourAngleRelativeToNoon(
 			hour,
@@ -69,18 +189,18 @@ const renderHourMarks = (
 			latitudeDegrees,
 		)
 		const hourAngleRadians = degreesToRadians(hourAngle - 90) // Adjust by -90 degrees to start from top
-		const x1 = (SUNDIAL_RADIUS - 10) * Math.cos(hourAngleRadians)
-		const y1 = (SUNDIAL_RADIUS - 10) * Math.sin(hourAngleRadians)
-		const x2 = SUNDIAL_RADIUS * Math.cos(hourAngleRadians)
-		const y2 = SUNDIAL_RADIUS * Math.sin(hourAngleRadians)
+		const x1 = (SUNDIAL_RADIUS - 50) * Math.cos(hourAngleRadians)
+		const y1 = (SUNDIAL_RADIUS - 50) * Math.sin(hourAngleRadians)
+		const x2 = CENTRAL_CIRCLE_RADIUS * Math.cos(hourAngleRadians)
+		const y2 = CENTRAL_CIRCLE_RADIUS * Math.sin(hourAngleRadians)
 
 		svg.append("line")
 			.attr("x1", x1)
 			.attr("y1", y1)
 			.attr("x2", x2)
 			.attr("y2", y2)
-			.attr("stroke", "black")
-			.attr("stroke-width", 2)
+			.attr("stroke", "rgba(0, 0, 0, 0.5)")
+			.attr("stroke-width", 1.5)
 
 		// Add hour labels
 		const labelX = (SUNDIAL_RADIUS - 30) * Math.cos(hourAngleRadians)
@@ -477,7 +597,7 @@ export const updateSundial = (
 		.attr("stroke-width", 2)
 
 	// Render hour marks
-	renderHourMarks(svg, userLocation.latitudeDegrees)
+	renderHourMarks(svg, userLocation.latitudeDegrees, false)
 
 	const lengthScale = Number.isFinite(gnomonLengthScale)
 		? Math.min(0.9, Math.max(0.3, gnomonLengthScale))
