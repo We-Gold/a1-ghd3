@@ -7,6 +7,7 @@ import { fetchAndSetUserLocation, getUserLocation } from "./location"
 import {
 	getSelectedGnomonLengthScale,
 	getSelectedGnomonStyle,
+	getShowCompassRose,
 	getCustomTimeOverride,
 	getCustomLocationOverride,
 	initSettingsPanel,
@@ -65,6 +66,7 @@ const animationLoop = () => {
 			getSelectedGnomonStyle(),
 			getSelectedGnomonLengthScale(),
 			getCustomTimeOverride(),
+			getShowCompassRose(),
 		)
 	}
 
@@ -82,6 +84,7 @@ window.addEventListener("sundial:gnomonStyleChanged", () => {
 		getSelectedGnomonStyle(),
 		getSelectedGnomonLengthScale(),
 		getCustomTimeOverride(),
+		getShowCompassRose(),
 	)
 })
 
@@ -96,6 +99,7 @@ window.addEventListener("sundial:gnomonLengthScaleChanged", () => {
 		getSelectedGnomonStyle(),
 		getSelectedGnomonLengthScale(),
 		getCustomTimeOverride(),
+		getShowCompassRose(),
 	)
 })
 
@@ -110,6 +114,7 @@ window.addEventListener("sundial:customTimeChanged", () => {
 		getSelectedGnomonStyle(),
 		getSelectedGnomonLengthScale(),
 		getCustomTimeOverride(),
+		getShowCompassRose(),
 	)
 })
 
@@ -124,6 +129,22 @@ window.addEventListener("sundial:customLocationChanged", () => {
 		getSelectedGnomonStyle(),
 		getSelectedGnomonLengthScale(),
 		getCustomTimeOverride(),
+		getShowCompassRose(),
+	)
+})
+
+window.addEventListener("sundial:showCompassChanged", () => {
+	const baseLocation = getUserLocation()
+	const locationOverride = getCustomLocationOverride()
+	const location = locationOverride
+		? { ...baseLocation, ...locationOverride }
+		: baseLocation
+	updateSundial(
+		location,
+		getSelectedGnomonStyle(),
+		getSelectedGnomonLengthScale(),
+		getCustomTimeOverride(),
+		getShowCompassRose(),
 	)
 })
 
@@ -135,6 +156,7 @@ window.addEventListener("resize", () => {
 		getSelectedGnomonStyle(),
 		getSelectedGnomonLengthScale(),
 		getCustomTimeOverride(),
+		getShowCompassRose(),
 	)
 })
 

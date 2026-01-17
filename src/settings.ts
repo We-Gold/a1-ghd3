@@ -4,9 +4,24 @@ import { getUserLocation } from "./location"
 
 const GNOMON_STYLE_STORAGE_KEY = "sundial.gnomonStyle"
 const GNOMON_LENGTH_SCALE_STORAGE_KEY = "sundial.gnomonLengthScale"
+const SHOW_COMPASS_ROSE_STORAGE_KEY = "sundial.showCompassRose"
 
 let selectedGnomonStyle: GnomonStyle = GnomonStyle.CurvedWall
 let selectedGnomonLengthScale = GNOMON_LENGTH_SCALE_DEFAULT
+
+let showCompassRose = false
+
+const readStoredShowCompassRose = (): boolean | null => {
+	try {
+		const raw = localStorage.getItem(SHOW_COMPASS_ROSE_STORAGE_KEY)
+		if (raw === null) return null
+		if (raw === "true") return true
+		if (raw === "false") return false
+		return null
+	} catch {
+		return null
+	}
+}
 
 let isSettingsPanelOpen = false
 let useCustomTime = false
@@ -33,6 +48,8 @@ const readStoredGnomonStyle = (): GnomonStyle | null => {
 export const getSelectedGnomonStyle = () => selectedGnomonStyle
 
 export const getSelectedGnomonLengthScale = () => selectedGnomonLengthScale
+
+export const getShowCompassRose = () => showCompassRose
 
 export const getCustomTimeOverride = (): {
 	hours: number
@@ -85,6 +102,9 @@ export const initSettingsPanel = () => {
 
 	const stored = readStoredGnomonStyle()
 	if (stored !== null) selectedGnomonStyle = stored
+
+	const storedShowCompass = readStoredShowCompassRose()
+	if (storedShowCompass !== null) showCompassRose = storedShowCompass
 
 	try {
 		const rawScale = localStorage.getItem(GNOMON_LENGTH_SCALE_STORAGE_KEY)
@@ -162,8 +182,13 @@ export const initSettingsPanel = () => {
 	/* AI Usage Note: "Can you add a slider to the settings panel to adjust the gnomon length? The options should range from 0.3 to 0.9, and in the code it should be that multiplied by the sundial radius to get the gnomon length" */
 	/* AI Usage Note: "Can you add an option to the settings panel to set a custom time for the sundial? It should only be active while the settings panel is open, and then reset when it is closed." */
 	/* AI Usage Note: "Similar to the custom time option, can you add a custom location (latitude and longitude) option that is similarly temporary?" */
+	/* AI Usage Note: Can you make an option in the settings to show or hide the compass rose? This should be a persistent setting */
 	settingsPanel.innerHTML = `
 		<h2>Settings</h2>
+		<div class="settings-row">
+			<input id="show-compass-rose" type="checkbox" />
+			<label for="show-compass-rose">Show compass rose</label>
+		</div>
 		<label for="gnomon-style-select">Sundial mode</label>
 		<select id="gnomon-style-select">
 			<option value="${GnomonStyle.Line}">Line</option>
@@ -218,6 +243,25 @@ export const initSettingsPanel = () => {
 		"#gnomon-style-select",
 	)
 	if (!select) return
+
+	const compassCheckbox =
+		settingsPanel.querySelector<HTMLInputElement>("#show-compass-rose")
+	if (!compassCheckbox) return
+
+	compassCheckbox.checked = showCompassRose
+	compassCheckbox.addEventListener("change", () => {
+		showCompassRose = compassCheckbox.checked
+		try {
+			localStorage.setItem(
+				SHOW_COMPASS_ROSE_STORAGE_KEY,
+				String(showCompassRose),
+			)
+		} catch {
+			// Ignore storage errors
+		}
+
+		window.dispatchEvent(new CustomEvent("sundial:showCompassChanged"))
+	})
 
 	select.value = String(selectedGnomonStyle)
 	select.addEventListener("change", () => {

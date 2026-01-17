@@ -538,6 +538,7 @@ export const updateSundial = (
 	gnomonStyle: GnomonStyle = GnomonStyle.CurvedWall,
 	gnomonLengthScale: number = GNOMON_LENGTH_SCALE_DEFAULT,
 	customTimeOverride?: { hours: number; minutes: number } | null,
+	showCompassRose: boolean = true,
 ) => {
 	const realNow = now()
 	const displayDate = new Date(realNow)
@@ -597,7 +598,7 @@ export const updateSundial = (
 		.attr("stroke-width", 2)
 
 	// Render hour marks
-	renderHourMarks(svg, userLocation.latitudeDegrees, false)
+	renderHourMarks(svg, userLocation.latitudeDegrees, showCompassRose)
 
 	const lengthScale = Number.isFinite(gnomonLengthScale)
 		? Math.min(0.9, Math.max(0.3, gnomonLengthScale))
