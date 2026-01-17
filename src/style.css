@@ -15,12 +15,14 @@ body {
   height: 100vh;
 }
 
+#time {
+  font-family: "Gideon Roman", serif;
+  font-size: 48px;
+}
+
 #container {
   padding: 40px;
   text-align: center;
-  border: 2px solid #ccc;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
 }
 
 #locate-btn {

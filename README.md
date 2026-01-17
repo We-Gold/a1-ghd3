@@ -10,3 +10,4 @@ Assignment 1 - Hello World: GitHub and d3
 ### Sundial Research
 
 https://sundials.org/index.php/teachers-corner/sundial-mathematics
+https://files.eric.ed.gov/fulltext/EJ802706.pdf
