@@ -13,7 +13,19 @@ import { romanNumeralForHour } from "./roman-numerals"
 import { now, getTimeString } from "./time"
 import type { UserLocation } from "./location"
 
+export enum GnomonStyle {
+	Line,
+	Wedge,
+	RightTriangle,
+	CurvedWall,
+}
+
 type Point = { x: number; y: number }
+
+const startHour = 2 // 2 AM
+const endHour = 22 // 10 PM
+const meridianHour = 12 // Noon
+const degreesPerHour = 360 / 24
 
 const computeHourAngle = (
 	hour: number,
@@ -50,11 +62,6 @@ const renderHourMarks = (
 	svg: d3.Selection<SVGGElement, unknown, HTMLElement, any>,
 	latitudeDegrees: number,
 ) => {
-	const degreesPerHour = 360 / 24
-	const startHour = 2 // 2 AM
-	const endHour = 22 // 10 PM
-	const meridianHour = 12 // Noon
-
 	for (let hour = startHour; hour <= endHour; hour++) {
 		const hourAngle = computeSundialHourAngleRelativeToNoon(
 			hour,
@@ -400,7 +407,10 @@ export const renderGnomonCurvedWall = (
 	svg.append("path").attr("d", shadowPath).attr("fill", "rgba(0, 0, 0, 0.25)")
 }
 
-export const updateSundial = (userLocation: UserLocation) => {
+export const updateSundial = (
+	userLocation: UserLocation,
+	gnomonStyle: GnomonStyle = GnomonStyle.CurvedWall,
+) => {
 	const nowDate = now()
 	const hours = nowDate.getHours()
 	const minutes = nowDate.getMinutes()
@@ -434,12 +444,27 @@ export const updateSundial = (userLocation: UserLocation) => {
 	renderHourMarks(svg, userLocation.latitudeDegrees)
 
 	// Render gnomon
-	renderGnomonCurvedWall(
+	const gnomonParams: [typeof svg, number, number, number, number] = [
 		svg,
 		userLocation.latitudeDegrees,
 		hours + minutes / 60,
-		12,
-		360 / 24,
-	)
+		meridianHour,
+		degreesPerHour,
+	]
+
+	switch (gnomonStyle) {
+		case GnomonStyle.Line:
+			renderGnomon(...gnomonParams)
+			break
+		case GnomonStyle.Wedge:
+			renderGnomonWedge(...gnomonParams)
+			break
+		case GnomonStyle.RightTriangle:
+			renderGnomonRightTriangle(...gnomonParams)
+			break
+		case GnomonStyle.CurvedWall:
+			renderGnomonCurvedWall(...gnomonParams)
+			break
+	}
 }
 
