@@ -4,7 +4,11 @@ import { updateSundial } from "./sundial"
 import { TIME_ELEMENT_ID, SUNDIAL_ELEMENT_ID } from "./constants"
 import { getCurrentSecond } from "./time"
 import { fetchAndSetUserLocation, getUserLocation } from "./location"
-import { getSelectedGnomonStyle, initSettingsPanel } from "./settings"
+import {
+	getSelectedGnomonLengthScale,
+	getSelectedGnomonStyle,
+	initSettingsPanel,
+} from "./settings"
 
 /* The location pin svg below was generated with AI - "Add a location pin icon svg" */
 /* The settings cog svg is from: https://www.svgrepo.com/svg/522451/settings-cog */
@@ -49,14 +53,30 @@ const animationLoop = () => {
 	// Update sundial only if the second has changed
 	if (lastRenderedSecond !== currentSecond) {
 		lastRenderedSecond = currentSecond
-		updateSundial(getUserLocation(), getSelectedGnomonStyle())
+		updateSundial(
+			getUserLocation(),
+			getSelectedGnomonStyle(),
+			getSelectedGnomonLengthScale(),
+		)
 	}
 
 	lastAnimationFrame = requestAnimationFrame(animationLoop)
 }
 
 window.addEventListener("sundial:gnomonStyleChanged", () => {
-	updateSundial(getUserLocation(), getSelectedGnomonStyle())
+	updateSundial(
+		getUserLocation(),
+		getSelectedGnomonStyle(),
+		getSelectedGnomonLengthScale(),
+	)
+})
+
+window.addEventListener("sundial:gnomonLengthScaleChanged", () => {
+	updateSundial(
+		getUserLocation(),
+		getSelectedGnomonStyle(),
+		getSelectedGnomonLengthScale(),
+	)
 })
 
 lastAnimationFrame = requestAnimationFrame(animationLoop)

@@ -5,7 +5,7 @@ import {
 	SUNDIAL_ELEMENT_ID,
 	SUNDIAL_WIDTH,
 	SUNDIAL_RADIUS,
-	GNOMON_LENGTH,
+	GNOMON_LENGTH_SCALE_DEFAULT,
 } from "./constants"
 
 import { degreesToRadians, radiansToDegrees } from "./angles"
@@ -107,9 +107,10 @@ export const renderGnomon = (
 	hour: number,
 	meridianHour: number,
 	degreesPerHour: number,
+	gnomonLength: number,
 ) => {
 	const gnomonEndY =
-		-GNOMON_LENGTH * Math.cos(degreesToRadians(latitudeDegrees))
+		-gnomonLength * Math.cos(degreesToRadians(latitudeDegrees))
 
 	svg.append("line")
 		.attr("x1", 0)
@@ -140,7 +141,7 @@ export const renderGnomon = (
 	)
 
 	// Calculate the length of the shadow
-	const shadowLength = GNOMON_LENGTH / Math.tan(alpha)
+	const shadowLength = gnomonLength / Math.tan(alpha)
 
 	// Calculate the end point of the shadow
 	const shadowEnd = {
@@ -168,9 +169,10 @@ export const renderGnomonWedge = (
 	hour: number,
 	meridianHour: number,
 	degreesPerHour: number,
+	gnomonLength: number,
 ) => {
 	const gnomonEndY =
-		-GNOMON_LENGTH * Math.cos(degreesToRadians(latitudeDegrees))
+		-gnomonLength * Math.cos(degreesToRadians(latitudeDegrees))
 
 	// A simple isosceles triangle "wedge" anchored at the center.
 	const baseWidth = 18
@@ -211,7 +213,7 @@ export const renderGnomonWedge = (
 	if (!Number.isFinite(tanAlpha) || Math.abs(tanAlpha) < 1e-6) return
 
 	// Length of the shadow (projection of the gnomon tip)
-	const shadowLength = GNOMON_LENGTH / tanAlpha
+	const shadowLength = gnomonLength / tanAlpha
 
 	const shadowTip: Point = {
 		x: shadowLength * Math.sin(theta),
@@ -237,6 +239,7 @@ export const renderGnomonRightTriangle = (
 	hour: number,
 	meridianHour: number,
 	degreesPerHour: number,
+	gnomonLength: number,
 ) => {
 	// A thin right-triangle approximation of a gnomon where:
 	// - one edge lies on the dial surface (center -> basePoint)
@@ -246,7 +249,7 @@ export const renderGnomonRightTriangle = (
 	// Note: SVG is 2D, so the "vertical" edge is depicted with a small offset.
 	const basePoint: Point = {
 		x: 0,
-		y: -GNOMON_LENGTH * Math.cos(degreesToRadians(latitudeDegrees)),
+		y: -gnomonLength * Math.cos(degreesToRadians(latitudeDegrees)),
 	}
 	const verticalVisualOffset = 8
 	const verticalTop: Point = {
@@ -284,7 +287,7 @@ export const renderGnomonRightTriangle = (
 	const tanAlpha = Math.tan(alpha)
 	if (!Number.isFinite(tanAlpha) || Math.abs(tanAlpha) < 1e-6) return
 
-	const shadowLength = GNOMON_LENGTH / tanAlpha
+	const shadowLength = gnomonLength / tanAlpha
 	const shadowTip: Point = {
 		x: shadowLength * Math.sin(theta),
 		y: -shadowLength * Math.cos(theta),
@@ -318,11 +321,12 @@ export const renderGnomonCurvedWall = (
 	hour: number,
 	meridianHour: number,
 	degreesPerHour: number,
+	gnomonLength: number,
 ) => {
 	const center: Point = { x: 0, y: 0 }
 	const basePoint: Point = {
 		x: 0,
-		y: -GNOMON_LENGTH * Math.cos(degreesToRadians(latitudeDegrees)),
+		y: -gnomonLength * Math.cos(degreesToRadians(latitudeDegrees)),
 	}
 
 	// 2D visualization of the vertical/perpendicular edge.
@@ -383,7 +387,7 @@ export const renderGnomonCurvedWall = (
 	const tanAlpha = Math.tan(alpha)
 	if (!Number.isFinite(tanAlpha) || Math.abs(tanAlpha) < 1e-6) return
 
-	const shadowLength = GNOMON_LENGTH / tanAlpha
+	const shadowLength = gnomonLength / tanAlpha
 	const shadowTip: Point = {
 		x: shadowLength * Math.sin(theta),
 		y: -shadowLength * Math.cos(theta),
@@ -410,6 +414,7 @@ export const renderGnomonCurvedWall = (
 export const updateSundial = (
 	userLocation: UserLocation,
 	gnomonStyle: GnomonStyle = GnomonStyle.CurvedWall,
+	gnomonLengthScale: number = GNOMON_LENGTH_SCALE_DEFAULT,
 ) => {
 	const nowDate = now()
 	const hours = nowDate.getHours()
@@ -443,13 +448,19 @@ export const updateSundial = (
 	// Render hour marks
 	renderHourMarks(svg, userLocation.latitudeDegrees)
 
+	const lengthScale = Number.isFinite(gnomonLengthScale)
+		? Math.min(0.9, Math.max(0.3, gnomonLengthScale))
+		: GNOMON_LENGTH_SCALE_DEFAULT
+	const gnomonLength = SUNDIAL_RADIUS * lengthScale
+
 	// Render gnomon
-	const gnomonParams: [typeof svg, number, number, number, number] = [
+	const gnomonParams: [typeof svg, number, number, number, number, number] = [
 		svg,
 		userLocation.latitudeDegrees,
 		hours + minutes / 60,
 		meridianHour,
 		degreesPerHour,
+		gnomonLength,
 	]
 
 	switch (gnomonStyle) {
