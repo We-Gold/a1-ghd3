@@ -1,0 +1,9 @@
+export const TIME_ELEMENT_ID = "time"
+export const SUNDIAL_ELEMENT_ID = "sundial"
+
+export const SUNDIAL_WIDTH = 600
+export const SUNDIAL_RADIUS = SUNDIAL_WIDTH / 2 - 20
+
+export const DEFAULT_LATITUDE = 42.27411618036735
+export const DEFAULT_LONGITUDE = -71.80798184501921
+
