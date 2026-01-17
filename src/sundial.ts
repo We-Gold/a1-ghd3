@@ -140,8 +140,11 @@ export const renderGnomon = (
 		Math.cos(degreesToRadians(latitudeDegrees)) * Math.cos(hourAngleRad),
 	)
 
-	// Calculate the length of the shadow
-	const shadowLength = gnomonLength / Math.tan(alpha)
+	const tanAlpha = Math.tan(alpha)
+	if (!Number.isFinite(tanAlpha) || Math.abs(tanAlpha) < 1e-6) return
+
+	// Use a positive length so the shadow direction doesn't flip at night hours.
+	const shadowLength = gnomonLength / Math.abs(tanAlpha)
 
 	// Calculate the end point of the shadow
 	const shadowEnd = {
@@ -213,7 +216,7 @@ export const renderGnomonWedge = (
 	if (!Number.isFinite(tanAlpha) || Math.abs(tanAlpha) < 1e-6) return
 
 	// Length of the shadow (projection of the gnomon tip)
-	const shadowLength = gnomonLength / tanAlpha
+	const shadowLength = gnomonLength / Math.abs(tanAlpha)
 
 	const shadowTip: Point = {
 		x: shadowLength * Math.sin(theta),
@@ -287,7 +290,7 @@ export const renderGnomonRightTriangle = (
 	const tanAlpha = Math.tan(alpha)
 	if (!Number.isFinite(tanAlpha) || Math.abs(tanAlpha) < 1e-6) return
 
-	const shadowLength = gnomonLength / tanAlpha
+	const shadowLength = gnomonLength / Math.abs(tanAlpha)
 	const shadowTip: Point = {
 		x: shadowLength * Math.sin(theta),
 		y: -shadowLength * Math.cos(theta),
@@ -387,7 +390,7 @@ export const renderGnomonCurvedWall = (
 	const tanAlpha = Math.tan(alpha)
 	if (!Number.isFinite(tanAlpha) || Math.abs(tanAlpha) < 1e-6) return
 
-	const shadowLength = gnomonLength / tanAlpha
+	const shadowLength = gnomonLength / Math.abs(tanAlpha)
 	const shadowTip: Point = {
 		x: shadowLength * Math.sin(theta),
 		y: -shadowLength * Math.cos(theta),
