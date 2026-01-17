@@ -579,6 +579,18 @@ export const updateSundial = (
 		? anchorRect.top + anchorRect.height / 2
 		: viewportHeight / 2
 
+	/* AI Usage Note: "Can you work on making this more responsive? In particular, the sundial looks great on a laptop screen but doesn't scale up or down to fit on a large monitor or on a mobile device. When the screen gets to a mobile size, the text showing the current time moves down and behind the sundial." */
+	// Keep existing geometry based on SUNDIAL_RADIUS, but scale the whole dial
+	// so it fits the placeholder size (responsive across mobile/desktop/large monitors).
+	const desiredDiameter = anchorRect
+		? Math.max(1, Math.min(anchorRect.width, anchorRect.height))
+		: Math.max(1, Math.min(viewportWidth, viewportHeight) * 0.9)
+	const desiredRadius = Math.max(1, desiredDiameter / 2 - 20)
+	const dialScale = Math.max(
+		0.35,
+		Math.min(3, desiredRadius / SUNDIAL_RADIUS),
+	)
+
 	const radius = SUNDIAL_RADIUS
 
 	const svg = sundial
@@ -588,7 +600,10 @@ export const updateSundial = (
 		.attr("height", viewportHeight)
 		.attr("viewBox", `0 0 ${viewportWidth} ${viewportHeight}`)
 		.append("g")
-		.attr("transform", `translate(${centerX}, ${centerY})`)
+		.attr(
+			"transform",
+			`translate(${centerX}, ${centerY}) scale(${dialScale})`,
+		)
 
 	// Create a circle for the sundial face
 	svg.append("circle")

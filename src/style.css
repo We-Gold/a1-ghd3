@@ -12,27 +12,35 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
+  min-height: 100svh;
 }
 
 #time {
   font-family: "Gideon Roman", serif;
-  font-size: 48px;
+  font-size: clamp(28px, 5vw, 64px);
+  position: relative;
+  z-index: 2;
 }
 
 #container {
-  padding: 40px;
+  padding: clamp(16px, 5vw, 40px);
   text-align: center;
   position: relative;
   z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(8px, 2vh, 18px);
 }
 
 /* Keep a sized placeholder in-flow so layout stays the same,
    while the real SVG canvas is rendered full-window behind it. */
 #sundial {
-  width: min(600px, 90vw);
+  width: clamp(260px, 70vmin, 1100px);
   aspect-ratio: 1 / 1;
   margin: 0 auto;
+  position: relative;
+  z-index: 1;
 }
 
 .sundial-canvas {
@@ -40,6 +48,12 @@ body {
   inset: 0;
   z-index: 0;
   pointer-events: none;
+}
+
+@media (max-width: 520px), (max-height: 700px) {
+  body {
+    align-items: flex-start;
+  }
 }
 
 #locate-btn {
